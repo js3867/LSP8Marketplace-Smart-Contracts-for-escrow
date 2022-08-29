@@ -178,9 +178,9 @@ contract LSP8Marketplace is
 
         // set up escrow
         _newEscrowSaleLYX(
-            LS8Address,
+            LSP8Address,
             tokenId,
-            NULL,
+            0,
             amount,
             LSP8Owner,
             msg.sender
@@ -231,7 +231,7 @@ contract LSP8Marketplace is
 
         // set up escrow
         escrowAddress = _newEscrowSaleLSP7(
-            LS8Address,
+            LSP8Address,
             tokenId,
             LSP7Address,
             amount,
