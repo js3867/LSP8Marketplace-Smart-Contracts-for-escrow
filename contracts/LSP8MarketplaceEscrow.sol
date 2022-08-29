@@ -4,6 +4,14 @@
 import {myfamilynft} from "https://github.com/FamilyNFT/FamilyHackathon/blob/backend/contracts/contracts/myfamilynft.sol";
 import {LSP8Marketplace} from "./LSP8Marketplace.sol";
 
+/**
+ * @title LSP8MarketplaceEscrow contract
+ * @author Sexton Jim
+ *
+ * @notice For reference I will assume LSP8 is the same as NFT.
+ * @notice ***Additional conrac support escrow while IRL products are in delivery
+ */
+
 pragma solidity ^0.8.0;
 
 contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
@@ -33,6 +41,21 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         address admin = msg.sender;
     }
 
+    /**
+     * Called by marketplace when buyer commits to make payment.
+     * Locks LSP8 and LSP7 in escrow until exchange is complete.
+     *
+     * @param LSP8Address Address of the LSP8 to be transfered.
+     * @param tokenId Token id of the LSP8 to be transfered.
+     * @param LSP7Address LSP7 token used to pay for LSP8 asset.
+     * @param amount Sale price of asset.
+     * @param seller Address of the LSP8 sender (aka from).
+     * @param buyer Address of the LSP8 receiver (aka to).
+     *
+     * @return address returns address(this) to receive escrowed LSP8 asset
+     *
+     * @notice this method can only be called once Buyer commits LSP7 payment
+     */
     function _newEscrowSaleLSP7(
         address LSP8Address,
         bytes32 tokenId,
@@ -41,7 +64,7 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         address seller,
         address buyer
     ) internal returns (address) {
-        require(!LSP7Address == NULL, "LSP7 address cannot be null");
+        require(LSP7Address.length != 0, "include LSP7 address");
         count++;
         escrowTrade memory _trade = escrowTrade(
             LSP8Address,
@@ -58,6 +81,20 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         return address(this);
     }
 
+    /**
+     * Called by marketplace when buyer commits to make payment.
+     * Locks LSP8 and LSP7 in escrow until exchange is complete.
+     *
+     * @param LSP8Address Address of the LSP8 to be transfered.
+     * @param tokenId Token id of the LSP8 to be transferred.
+     * @param amount Sale price of asset.
+     * @param seller Address of the LSP8 sender (aka from).
+     * @param buyer Address of the LSP8 receiver (aka to).
+     *
+     * @return address returns address(this) to receive escrowed LSP8 asset
+     *
+     * @notice this method can only be called once Buyer commits LYX payment
+     */
     function _newEscrowSaleLYX(
         address LSP8Address,
         bytes32 tokenId,
@@ -69,8 +106,8 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         escrowTrade memory _trade = escrowTrade(
             LSP8Address,
             tokenId,
-            NULL,
-            PriceLYX,
+            0, //  how to avoid this (LSP7Address) for native LYX payment?
+            amount,
             seller,
             buyer,
             PENDING,
@@ -85,6 +122,7 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      * Called by buyer or seller to report the item as lost.
      * Checks status of buyer and seller and closes trade accordingly
      * (or waits for the second responses).
+     *
      * @dev updated bStatus or sStatus to LOST when called.
      *
      * @param _Id ID of the trade.
@@ -215,7 +253,7 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         );
 
         // transfer funds to SELLER+MINTER depending on payment type (LSP7 or LYX)
-        if (!trades[_Id].LSP7Address == NULL) {
+        if (trades[_Id].LSP7Address.length != 0) {
             // SELLER
             _transferLSP7(
                 trades[_Id].LSP7Address,
@@ -262,7 +300,7 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
             amount
         );
         // transfer funds back to buyer
-        if (!trades[_Id].LSP7Address == NULL) {
+        if (trades[_Id].LSP7Address.length != 0) {
             _transferLSP7(
                 trades[_Id].LSP7Address,
                 address(this),
@@ -295,7 +333,7 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
             true,
             amount
         );
-        if (!trades[_Id].LSP7Address == NULL) {
+        if (trades[_Id].LSP7Address.length != 0) {
             _transferLSP7(
                 trades[_Id].LSP7Address,
                 address(this),
