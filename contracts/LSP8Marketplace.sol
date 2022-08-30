@@ -124,6 +124,8 @@ contract LSP8Marketplace is
         _newEscrowSaleLYX(LSP8Address, tokenId, amount, LSP8Owner, msg.sender);
 
         // lock in escrow
+        // NEED TO CONFIRM THAT address(this) is the called of the function via inheritance
+        // and not always this explicit host contract
         _transferLSP8(LSP8Address, LSP8Owner, address(this), tokenId, false, 1);
         address(this).transfer(amount);
         // _transferLSP8(LSP8Address, LSP8Owner, msg.sender, tokenId, false, 1);
