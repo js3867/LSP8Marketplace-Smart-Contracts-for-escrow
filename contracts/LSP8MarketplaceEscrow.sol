@@ -40,13 +40,13 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
     uint256 count;
     mapping(uint256 => escrowTrade) trades; // trade objects attached to trades
 
-    constructor() {
-        address admin = msg.sender;
-    }
+    // constructor() {
+    //     address admin = msg.sender;
+    // }
 
     /**
      * Called by marketplace when buyer commits to make payment.
-     * Locks LSP8 and LSP7 in escrow until exchange is complete.
+     * Locks LSP8 LYX in escrow until exchange is complete.
      *
      * @param LSP8Address Address of the LSP8 to be transfered.
      * @param tokenId Token id of the LSP8 to be transferred.
@@ -135,6 +135,10 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             msg.sender == trades[Id].to || msg.sender == trades[Id].from,
             "not buyer or seller for this trade"
         );
+        require(
+            trades[Id].tradeStatus == status.PENDING,
+            "Trade has been closed"
+        );
         // buyer
         if (msg.sender == trades[Id].to) {
             trades[Id].bStatus == status.CONFIRMED;
@@ -176,7 +180,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
      */
     function _getMinter(address _LSP8Address, bytes32 _tokenId)
         public
-        view
+        pure
         returns (address)
     {
         address minter; // THIS NEEDS TO BE SOLVED!
