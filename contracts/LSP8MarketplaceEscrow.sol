@@ -199,7 +199,10 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
     function _confirmTrade(uint256 Id) private payable {
         uint256 _valueSeller = ((trades[Id].amount) * 90) / 100;
         uint256 _valueMinter = ((trades[Id].amount) * 10) / 100;
-        tokenMinter = _getMinter(trades[Id].LSP8Address, trades[Id].tokenId); // <<<<< still need to do this
+        address tokenMinter = _getMinter(
+            trades[Id].LSP8Address,
+            trades[Id].tokenId
+        ); // <<<<< still need to do this
 
         // transfer LSP8 asset to buyer
         _transferLSP8(
@@ -234,9 +237,9 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             trades[Id].LSP8Address,
             address(this),
             trades[Id].from,
-            tokenId,
+            trades[Id].tokenId,
             true,
-            amount
+            trades[Id].amount
         );
         // return LYX to buyer
         trades[Id].to.transfer(trades[Id].amount);
