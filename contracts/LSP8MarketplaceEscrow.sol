@@ -1,8 +1,10 @@
 // escrow.sol
 // SPDX-License-Identifier: MIT
 
-import {myfamilynft} from "https://github.com/FamilyNFT/FamilyHackathon/blob/backend/contracts/contracts/myfamilynft.sol";
+// import {myfamilynft} from "https://github.com/FamilyNFT/FamilyHackathon/blob/backend/contracts/contracts/myfamilynft.sol";
+// import {LSP8Marketplace} from "./LSP8Marketplace.sol";
 import {LSP8Marketplace} from "./LSP8Marketplace.sol";
+import {familynft} from "./familynft.sol";
 
 /**
  * @title LSP8MarketplaceEscrow contract
@@ -14,11 +16,11 @@ import {LSP8Marketplace} from "./LSP8Marketplace.sol";
 
 pragma solidity ^0.8.0;
 
-contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
+// contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
+contract LSP8MarketplaceEscrow is LSP8Marketplace {
     struct escrowTrade {
         address LSP8Address;
         bytes32 tokenId;
-        address LSP7Address;
         uint256 amount;
         address from;
         address to;
@@ -46,46 +48,6 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      * Locks LSP8 and LSP7 in escrow until exchange is complete.
      *
      * @param LSP8Address Address of the LSP8 to be transfered.
-     * @param tokenId Token id of the LSP8 to be transfered.
-     * @param LSP7Address LSP7 token used to pay for LSP8 asset.
-     * @param amount Sale price of asset.
-     * @param seller Address of the LSP8 sender (aka from).
-     * @param buyer Address of the LSP8 receiver (aka to).
-     *
-     * @return address returns address(this) to receive escrowed LSP8 asset
-     *
-     * @notice this method can only be called once Buyer commits LSP7 payment
-     */
-    function _newEscrowSaleLSP7(
-        address LSP8Address,
-        bytes32 tokenId,
-        address LSP7Address,
-        uint256 amount,
-        address seller,
-        address buyer
-    ) internal returns (address) {
-        require(LSP7Address.length != 0, "include LSP7 address");
-        count++;
-        escrowTrade memory _trade = escrowTrade(
-            LSP8Address,
-            tokenId,
-            LSP7Address,
-            amount,
-            seller,
-            buyer,
-            PENDING,
-            PENDING,
-            PENDING
-        );
-        trades[count] = _trade;
-        return address(this);
-    }
-
-    /**
-     * Called by marketplace when buyer commits to make payment.
-     * Locks LSP8 and LSP7 in escrow until exchange is complete.
-     *
-     * @param LSP8Address Address of the LSP8 to be transfered.
      * @param tokenId Token id of the LSP8 to be transferred.
      * @param amount Sale price of asset.
      * @param seller Address of the LSP8 sender (aka from).
@@ -106,7 +68,6 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
         escrowTrade memory _trade = escrowTrade(
             LSP8Address,
             tokenId,
-            0, //  how to avoid this (LSP7Address) for native LYX payment?
             amount,
             seller,
             buyer,
@@ -125,35 +86,32 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      *
      * @dev updated bStatus or sStatus to LOST when called.
      *
-     * @param _Id ID of the trade.
+     * @param Id ID of the trade.
      *
      * @notice only seller or buyer of the trade can call this function
      */
-    function reportLost(uint256 _Id) external {
+    function reportLost(uint256 Id) external {
         require(
-            msg.sender == trades[_Id].to || msg.sender == trades[_Id].from,
+            msg.sender == trades[Id].to || msg.sender == trades[Id].from,
             "You are not buyer or seller for this trade"
         );
+        require(trades[Id].tradeStatus == PENDING, "Trade has been closed");
         // buyer
-        if (msg.sender == trades[_Id].to) {
-            trades[_Id].bStatus == LOST;
-            if (trades[_Id].sStatus == LOST) {
-                _lostTrade(_Id);
-                trades[_id].tradeStatus = LOST;
-            } else if (trades[_Id].sStatus == CONFIRMED) {
-                _resolveTrade(_Id);
-                trades[_id].tradeStatus = CONFLICT;
+        if (msg.sender == trades[Id].to) {
+            trades[Id].bStatus == LOST;
+            if (trades[Id].sStatus == LOST) {
+                _lostTrade(Id);
+            } else if (trades[Id].sStatus == CONFIRMED) {
+                _resolveTrade(Id);
             }
         }
         // seller
-        if (msg.sender == trades[_Id].from) {
-            trades[_Id].sStatus == LOST;
-            if (trades[_Id].bStatus == LOST) {
-                _lostTrade(_Id);
-                trades[_id].tradeStatus = LOST;
-            } else if (trades[_Id].bStatus == CONFIRMED) {
-                _resolveTrade(_Id);
-                trades[_id].tradeStatus = CONFLICT;
+        if (msg.sender == trades[Id].from) {
+            trades[Id].sStatus == LOST;
+            if (trades[Id].bStatus == LOST) {
+                _lostTrade(Id);
+            } else if (trades[Id].bStatus == CONFIRMED) {
+                _resolveTrade(Id);
             }
         }
     }
@@ -164,35 +122,31 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      * (or waits for the second responses).
      * @dev updated bStatus or sStatus to CONFIRMED when called.
      *
-     * @param _Id ID of the trade.
+     * @param Id ID of the trade.
      *
      * @notice only seller or buyer of the trade can call this function.
      */
-    function reportConfirm(uint256 _Id) external {
+    function reportConfirm(uint256 Id) external {
         require(
-            msg.sender == trades[_Id].to || msg.sender == trades[_Id].from,
+            msg.sender == trades[Id].to || msg.sender == trades[Id].from,
             "not buyer or seller for this trade"
         );
         // buyer
-        if (msg.sender == trades[_Id].to) {
-            trades[_Id].bStatus == CONFIRMED;
-            if (trades[_Id].sStatus == CONFIRMED) {
-                _confirmTrade(_Id);
-                trades[_id].tradeStatus = CONFIRMED;
-            } else if (trades[_Id].sStatus == LOST) {
-                _resolveTrade(_Id);
-                trades[_id].tradeStatus = CONFLICT;
+        if (msg.sender == trades[Id].to) {
+            trades[Id].bStatus == CONFIRMED;
+            if (trades[Id].sStatus == CONFIRMED) {
+                _confirmTrade(Id);
+            } else if (trades[Id].sStatus == LOST) {
+                _resolveTrade(Id);
             }
         }
         // seller
-        if (msg.sender == trades[_Id].from) {
-            trades[_Id].sStatus == CONFIRMED;
-            if (trades[_Id].bStatus == CONFIRMED) {
-                _confirmTrade(_Id);
-                trades[_id].tradeStatus = CONFIRMED;
-            } else if (trades[_Id].bStatus == lOST) {
-                _resolveTrade(_Id);
-                trades[_id].tradeStatus = CONFLICT;
+        if (msg.sender == trades[Id].from) {
+            trades[Id].sStatus == CONFIRMED;
+            if (trades[Id].bStatus == CONFIRMED) {
+                _confirmTrade(Id);
+            } else if (trades[Id].bStatus == lOST) {
+                _resolveTrade(Id);
             }
         }
     }
@@ -200,22 +154,23 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
     /**
      * returns status of trade for a give tradeID
 
-     * @param _Id ID of the trade.
+     * @param Id ID of the trade.
      *
      * @notice anyone can call this function
      */
-    function getStatus(uint256 _id) public view returns (status) {
-        return trades[_id].tradeStatus;
+    function getStatus(uint256 Id) public view returns (status) {
+        return trades[Id].tradeStatus;
     }
 
     /**
-     * returns status of trade for a give tradeID
+     * returns the Minter of a given LSP8 asset
 
-     * @param _Id ID of the trade.
+     * @param _LSP8Address the LSP8 collection.
+     * @param _tokenId the unique token ID.
      *
      * @notice anyone can call this function
      */
-    function getMinter(address _LSP8Address, uint256 _tokenId)
+    function _getMinter(address _LSP8Address, uint256 _tokenId)
         public
         view
         returns (address)
@@ -231,51 +186,31 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      * Completes trade by transferring assets to their new respective
      * owners, transfers royalties & updates Trade state on-chain.
      *
-     * @param _Id ID of the trade.
+     * @param Id ID of the trade.
      *
      * @notice only this contract can call this function. For more
      * information see _transferLS7 and _transferLS8 functions in
      * LSP8MarketplaceTrade.sol.
      */
-    function _confirmTrade(uint256 _Id) private payable {
-        uint256 _valueSeller = ((trades[_Id].amount) * 90) / 100;
-        uint256 _valueMinter = ((trades[_Id].amount) * 10) / 100;
-        tokenMinter = _getMinterInfo(trades[_id].LSP8Address); // <<<<< still need to do this
+    function _confirmTrade(uint256 Id) private payable {
+        uint256 _valueSeller = ((trades[Id].amount) * 90) / 100;
+        uint256 _valueMinter = ((trades[Id].amount) * 10) / 100;
+        tokenMinter = _getMinter(trades[Id].LSP8Address, trades[Id].tokenId); // <<<<< still need to do this
 
         // transfer LSP8 asset to buyer
         _transferLSP8(
-            trades[_Id].tokenAddress,
-            trades[_Id].from,
-            trades[_Id].to,
-            trades[_Id].tokenId,
+            trades[Id].tokenAddress,
+            trades[Id].from,
+            trades[Id].to,
+            trades[Id].tokenId,
             true,
             1
         );
-
-        // transfer funds to SELLER+MINTER depending on payment type (LSP7 or LYX)
-        if (trades[_Id].LSP7Address.length != 0) {
-            // SELLER
-            _transferLSP7(
-                trades[_Id].LSP7Address,
-                address(this),
-                _seller,
-                _valueSeller,
-                true
-            );
-            // MINTER
-            _transferLSP7(
-                trades[_Id].LSP7Address,
-                address(this),
-                tokenMinter, // <------ TO-DO
-                _valueRoyalty,
-                true
-            );
-        } else {
-            // transfer LYX to SELLER+MINTER
-            trades[_Id].from.transfer(_valueSeller);
-            tokenMinter.transfer(_valueMinter);
-        }
-        trades[_id].tradeStatus = CONFIRMED;
+        // transfer LYX to SELLER+MINTER
+        trades[Id].from.transfer(_valueSeller);
+        tokenMinter.transfer(_valueMinter);
+        // updates tradeState
+        trades[Id].tradeStatus = CONFIRMED;
     }
 
     /**
@@ -283,68 +218,51 @@ contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
      * item as lost. Transfers assets back to their respective owners
      * & updates Trade state on-chain.
      *
-     * @param _Id ID of the trade.
+     * @param Id ID of the trade.
      *
      * @notice only this contract can call this function. For more
      * information see _transferLS7 and _transferLS8 functions in
      * LSP8MarketplaceTrade.sol.
      */
-    function _lostTrade(uint256 _Id) private payable {
+    function _lostTrade(uint256 Id) private payable {
         // transfer LS8 asset back to seller
         _transferLSP8(
-            trades[_Id].LSP8Address,
+            trades[Id].LSP8Address,
             address(this),
-            trades[_Id].from,
+            trades[Id].from,
             tokenId,
             true,
             amount
         );
-        // transfer funds back to buyer
-        if (trades[_Id].LSP7Address.length != 0) {
-            _transferLSP7(
-                trades[_Id].LSP7Address,
-                address(this),
-                trades[_Id].to,
-                trades[_Id].amount,
-                true
-            );
-        } else {
-            trades[_Id].to.transfer(trades[_Id].amount);
-        }
-        trades[_id].tradeStatus = LOST;
+        // return LYX to buyer
+        trades[Id].to.transfer(trades[Id].amount);
+        // updates tradeState
+        trades[Id].tradeStatus = LOST;
     }
 
-    /**
-     * This function is called if both parties call a different report
-     * function (Confirm/Lost). All assets are transferred to the contract.
-     *
-     * @param _Id ID of the trade.
-     *
-     * @notice only this contract can call this function. For more
-     * information see _transferLS7 and _transferLS8 functions in
-     * LSP8MarketplaceTrade.sol.
-     */
-    function _resolveTrade(_Id) private payable {
-        _transferLSP8(
-            trades[_Id].tokenAddress, // ???
-            address(this), // which address should this be?? Marketplace? This contract? Is there an Appeal court?
-            admin,
-            trades[_Id].tokenId,
-            true,
-            amount
-        );
-        if (trades[_Id].LSP7Address.length != 0) {
-            _transferLSP7(
-                trades[_Id].LSP7Address,
-                address(this),
-                admin,
-                trades[_Id].amount,
-                true
-            );
-        } else {
-            WHERE.transfer(trades[_Id].amount); // WHERE ARE RESOLVED FUNDS KEPT?
-        }
+    // /**
+    //  * This function is called if both parties call a different report
+    //  * function (Confirm/Lost). All assets are transferred to the contract.
+    //  *
+    //  * @param Id ID of the trade.
+    //  *
+    //  * @notice only this contract can call this function. For more
+    //  * information see _transferLS7 and _transferLS8 functions in
+    //  * LSP8MarketplaceTrade.sol.
+    //  */
+    function _resolveTrade(Id) private {
+        // ESCROW CONTRACT HOLDS ASSETS FOR PURPOSE OF HACKATHON
 
-        trades[_id].tradeStatus = CONFLICT;
+        // _transferLSP8(
+        //     trades[Id].tokenAddress, // ???
+        //     address(this), // which address should this be?? Marketplace? This contract? Is there an Appeal court?
+        //     admin,
+        //     trades[Id].tokenId,
+        //     true,
+        //     amount
+        // );
+        // WHERE.transfer(trades[Id].amount); // WHERE ARE RESOLVED FUNDS KEPT?
+
+        trades[Id].tradeStatus = CONFLICT;
     }
 }
