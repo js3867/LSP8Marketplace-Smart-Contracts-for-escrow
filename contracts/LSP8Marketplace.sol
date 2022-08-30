@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {ILSP8IdentifiableDigitalAsset} from "/home/b00ste/Projects/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/ILSP8IdentifiableDigitalAsset.sol";
+// import {ILSP8IdentifiableDigitalAsset} from "/home/b00ste/Projects/lsp-smart-contracts/contracts/LSP8IdentifiableDigitalAsset/ILSP8IdentifiableDigitalAsset.sol";
+import {ILSP8IdentifiableDigitalAsset} from "https://github.com/lukso-network/lsp-smart-contracts/blob/develop/contracts/LSP8IdentifiableDigitalAsset/ILSP8IdentifiableDigitalAsset.sol";
 import {LSP8MarketplaceOffer} from "./LSP8MarketplaceOffer.sol";
 import {LSP8MarketplacePrice} from "./LSP8MarketplacePrice.sol";
 import {LSP8MarketplaceTrade} from "./LSP8MarketplaceTrade.sol";
@@ -36,7 +37,6 @@ contract LSP8Marketplace is
      * For information about `_addLYXPrice` and `_addLSP7Prices` functions check the LSP8MArketplacePrice smart contract.
      */
     function putLSP8OnSale(
-        // *** <<<<------ Buyers call this function to make buy an asset
         address LSP8Address,
         bytes32 tokenId,
         uint256 LYXAmount,
@@ -121,15 +121,17 @@ contract LSP8Marketplace is
         _removeLSP8Sale(LSP8Address, tokenId);
 
         // set up escrow
-        _newEscrowSaleLYX(LSP8Address, tokenId, amount, LSP8Owner, msg.sender);
+        address escrowAddress = _newEscrowSaleLYX(
+            LSP8Address,
+            tokenId,
+            amount,
+            LSP8Owner,
+            msg.sender
+        );
 
         // lock in escrow
-        // NEED TO CONFIRM THAT address(this) is the called of the function via inheritance
-        // and not always this explicit host contract
-        _transferLSP8(LSP8Address, LSP8Owner, address(this), tokenId, false, 1);
-        address(this).transfer(amount);
-        // _transferLSP8(LSP8Address, LSP8Owner, msg.sender, tokenId, false, 1);
-        // LSP8Owner.transfer(amount);
+        _transferLSP8(LSP8Address, LSP8Owner, escrowAddress, tokenId, false, 1);
+        payable(escrowAddress).transfer(amount);
     }
 
     //
