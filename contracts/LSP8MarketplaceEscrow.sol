@@ -174,7 +174,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
      *
      * @notice anyone can call this function
      */
-    function _getMinter(address _LSP8Address, uint256 _tokenId)
+    function _getMinter(address _LSP8Address, bytes32 _tokenId)
         public
         view
         returns (address)
@@ -196,7 +196,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
      * information see _transferLS7 and _transferLS8 functions in
      * LSP8MarketplaceTrade.sol.
      */
-    function _confirmTrade(uint256 Id) private payable {
+    function _confirmTrade(uint256 Id) private {
         uint256 _valueSeller = ((trades[Id].amount) * 90) / 100;
         uint256 _valueMinter = ((trades[Id].amount) * 10) / 100;
         address tokenMinter = _getMinter(
@@ -206,7 +206,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
 
         // transfer LSP8 asset to buyer
         _transferLSP8(
-            trades[Id].tokenAddress,
+            trades[Id].LSP8Address,
             trades[Id].from,
             trades[Id].to,
             trades[Id].tokenId,
@@ -214,8 +214,8 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             1
         );
         // transfer LYX to SELLER+MINTER
-        trades[Id].from.transfer(_valueSeller);
-        tokenMinter.transfer(_valueMinter);
+        payable(trades[Id].from).transfer(_valueSeller);
+        payable(tokenMinter).transfer(_valueMinter);
         // updates tradeState
         trades[Id].tradeStatus = status.CONFIRMED;
     }
@@ -231,7 +231,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
      * information see _transferLS7 and _transferLS8 functions in
      * LSP8MarketplaceTrade.sol.
      */
-    function _lostTrade(uint256 Id) private payable {
+    function _lostTrade(uint256 Id) private {
         // transfer LS8 asset back to seller
         _transferLSP8(
             trades[Id].LSP8Address,
@@ -242,7 +242,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             trades[Id].amount
         );
         // return LYX to buyer
-        trades[Id].to.transfer(trades[Id].amount);
+        payable(trades[Id].to).transfer(trades[Id].amount);
         // updates tradeState
         trades[Id].tradeStatus = status.LOST;
     }
