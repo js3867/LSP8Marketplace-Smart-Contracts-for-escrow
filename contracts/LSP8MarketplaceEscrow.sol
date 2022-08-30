@@ -72,9 +72,9 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             amount,
             seller,
             buyer,
-            PENDING,
-            PENDING,
-            PENDING
+            status.PENDING,
+            status.PENDING,
+            status.PENDING
         );
         trades[count] = _trade;
         return address(this);
@@ -96,22 +96,25 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
             msg.sender == trades[Id].to || msg.sender == trades[Id].from,
             "You are not buyer or seller for this trade"
         );
-        require(trades[Id].tradeStatus == PENDING, "Trade has been closed");
+        require(
+            trades[Id].tradeStatus == status.PENDING,
+            "Trade has been closed"
+        );
         // buyer
         if (msg.sender == trades[Id].to) {
-            trades[Id].bStatus == LOST;
-            if (trades[Id].sStatus == LOST) {
+            trades[Id].bStatus == status.LOST;
+            if (trades[Id].sStatus == status.LOST) {
                 _lostTrade(Id);
-            } else if (trades[Id].sStatus == CONFIRMED) {
+            } else if (trades[Id].sStatus == status.CONFIRMED) {
                 _resolveTrade(Id);
             }
         }
         // seller
         if (msg.sender == trades[Id].from) {
-            trades[Id].sStatus == LOST;
-            if (trades[Id].bStatus == LOST) {
+            trades[Id].sStatus == status.LOST;
+            if (trades[Id].bStatus == status.LOST) {
                 _lostTrade(Id);
-            } else if (trades[Id].bStatus == CONFIRMED) {
+            } else if (trades[Id].bStatus == status.CONFIRMED) {
                 _resolveTrade(Id);
             }
         }
@@ -134,19 +137,19 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
         );
         // buyer
         if (msg.sender == trades[Id].to) {
-            trades[Id].bStatus == CONFIRMED;
-            if (trades[Id].sStatus == CONFIRMED) {
+            trades[Id].bStatus == status.CONFIRMED;
+            if (trades[Id].sStatus == status.CONFIRMED) {
                 _confirmTrade(Id);
-            } else if (trades[Id].sStatus == LOST) {
+            } else if (trades[Id].sStatus == status.LOST) {
                 _resolveTrade(Id);
             }
         }
         // seller
         if (msg.sender == trades[Id].from) {
-            trades[Id].sStatus == CONFIRMED;
-            if (trades[Id].bStatus == CONFIRMED) {
+            trades[Id].sStatus == status.CONFIRMED;
+            if (trades[Id].bStatus == status.CONFIRMED) {
                 _confirmTrade(Id);
-            } else if (trades[Id].bStatus == lOST) {
+            } else if (trades[Id].bStatus == status.LOST) {
                 _resolveTrade(Id);
             }
         }
@@ -211,7 +214,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
         trades[Id].from.transfer(_valueSeller);
         tokenMinter.transfer(_valueMinter);
         // updates tradeState
-        trades[Id].tradeStatus = CONFIRMED;
+        trades[Id].tradeStatus = status.CONFIRMED;
     }
 
     /**
@@ -238,7 +241,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
         // return LYX to buyer
         trades[Id].to.transfer(trades[Id].amount);
         // updates tradeState
-        trades[Id].tradeStatus = LOST;
+        trades[Id].tradeStatus = status.LOST;
     }
 
     // /**
@@ -251,7 +254,7 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
     //  * information see _transferLS7 and _transferLS8 functions in
     //  * LSP8MarketplaceTrade.sol.
     //  */
-    function _resolveTrade(Id) private {
+    function _resolveTrade(uint256 Id) private {
         // ESCROW CONTRACT HOLDS ASSETS FOR PURPOSE OF HACKATHON
 
         // _transferLSP8(
@@ -263,7 +266,6 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
         //     amount
         // );
         // WHERE.transfer(trades[Id].amount); // WHERE ARE RESOLVED FUNDS KEPT?
-
-        trades[Id].tradeStatus = CONFLICT;
+        trades[Id].tradeStatus = status.CONFLICT;
     }
 }
