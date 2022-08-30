@@ -38,6 +38,7 @@ contract LSP8Marketplace is
      * For information about `_addLYXPrice` and `_addLSP7Prices` functions check the LSP8MArketplacePrice smart contract.
      */
     function putLSP8OnSale(
+        // *** <<<<------ Buyers call this function to make buy an asset
         address LSP8Address,
         bytes32 tokenId,
         uint256 LYXAmount,
