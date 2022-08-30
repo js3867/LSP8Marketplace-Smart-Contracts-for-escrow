@@ -3,7 +3,8 @@
 
 // import {myfamilynft} from "https://github.com/FamilyNFT/FamilyHackathon/blob/backend/contracts/contracts/myfamilynft.sol";
 // import {LSP8Marketplace} from "./LSP8Marketplace.sol";
-import {LSP8Marketplace} from "./LSP8Marketplace.sol";
+// import {LSP8Marketplace} from "./LSP8Marketplace.sol";
+import {LSP8MarketplaceTrade} from "./LSP8MarketplaceTrade.sol";
 import {familynft} from "./familynft.sol";
 
 /**
@@ -11,13 +12,13 @@ import {familynft} from "./familynft.sol";
  * @author Sexton Jim
  *
  * @notice For reference I will assume LSP8 is the same as NFT.
- * @notice ***Additional conrac support escrow while IRL products are in delivery
+ * @notice ***Additional contract support escrow while IRL products are in delivery
  */
 
 pragma solidity ^0.8.0;
 
 // contract LSP8MarketplaceEscrow is LSP8Marketplace, familynft {
-contract LSP8MarketplaceEscrow is LSP8Marketplace {
+contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
     struct escrowTrade {
         address LSP8Address;
         bytes32 tokenId;

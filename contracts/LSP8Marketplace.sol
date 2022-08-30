@@ -31,8 +31,6 @@ contract LSP8Marketplace is
      * @param LSP8Address Address of the LSP8 token contract.
      * @param tokenId Token id of the `LSP8Address` NFT that will be put on sale.
      * @param LYXAmount Buyout amount of LYX coins.
-     * @param LSP7Addresses Addresses of the LSP7 token contracts allowed for buyout.
-     * @param LSP7Amounts Buyout amounts in `LSP7Addresses` tokens.
      *
      * @notice For information about `ownsLSP8` and `LSP8NotOnSale` modifiers and about `_addLSP8Sale` function check the LSP8MarketplaceSale smart contract.
      * For information about `_addLYXPrice` and `_addLSP7Prices` functions check the LSP8MArketplacePrice smart contract.
@@ -42,8 +40,6 @@ contract LSP8Marketplace is
         address LSP8Address,
         bytes32 tokenId,
         uint256 LYXAmount,
-        address[] memory LSP7Addresses,
-        uint256[] memory LSP7Amounts,
         bool[3] memory allowedOffers
     )
         external
@@ -52,7 +48,6 @@ contract LSP8Marketplace is
     {
         _addLSP8Sale(LSP8Address, tokenId, allowedOffers); // this authorises 'address(this)' to sell
         _addLYXPrice(LSP8Address, tokenId, LYXAmount);
-        _addLSP7Prices(LSP8Address, tokenId, LSP7Addresses, LSP7Amounts);
     }
 
     /**
@@ -95,59 +90,7 @@ contract LSP8Marketplace is
         _addLYXPrice(LSP8Address, tokenId, LYXAmount);
     }
 
-    /**
-     * Change LSP7 price for a specific LSP8.
-     *
-     * @param LSP8Address Address of the LSP8 token contract.
-     * @param tokenId Token id of the `LSP8Address` NFT that is on sale.
-     * @param LSP7Address LSP7 address of an allowed token for buyout of the NFT.
-     * @param LSP7Amount New buyout amount in `LSP7Address` token for the NFT on sale.
-     *
-     * @notice For information about `ownsLSP8` and `LSP8OnSale` modifiers check the LSP8MarketplaceSale smart contract.
-     * For information about `LSP7PriceDoesNotExist` modifier check LSP8MarketplacePrice smart contract.
-     * For information about `removeLSP7PriceByAddress` and `_addLSP7PriceByAddress` methods check the LSP8MarketplacePrice smart contract.
-     */
-    function changeLSP7Price(
-        address LSP8Address,
-        bytes32 tokenId,
-        address LSP7Address,
-        uint256 LSP7Amount
-    )
-        external
-        ownsLSP8(LSP8Address, tokenId)
-        LSP8OnSale(LSP8Address, tokenId)
-        LSP7PriceDoesNotExist(LSP8Address, tokenId, LSP7Address)
-    {
-        _removeLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address);
-        _addLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address, LSP7Amount);
-    }
-
-    /**
-     * Add LSP7 price for a specific LSP8.
-     *
-     * @param LSP8Address Address of the LSP8 token contract.
-     * @param tokenId Token id of the `LSP8Address` NFT that is on sale.
-     * @param LSP7Address LSP7 address of an allowed token for buyout of the NFT.
-     * @param LSP7Amount New buyout amount in `LSP7Address` token for the NFT on sale.
-     *
-     * @notice For information about `ownsLSP8` and `LSP8OnSale` modifiers
-     * check the LSP8MarketplaceSale smart contract.
-     * For information about `LSP7PriceDoesExist` modifier and `_addLSP7PriceByAddress` method
-     * check the LSP8MarketplacePrice smart contract.
-     */
-    function addLSP7Price(
-        address LSP8Address,
-        bytes32 tokenId,
-        address LSP7Address,
-        uint256 LSP7Amount
-    )
-        external
-        ownsLSP8(LSP8Address, tokenId)
-        LSP8OnSale(LSP8Address, tokenId)
-        LSP7PriceDoesExist(LSP8Address, tokenId, LSP7Address)
-    {
-        _addLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address, LSP7Amount);
-    }
+    //
 
     /**
      * Buy LSP8 with LYX.
@@ -178,14 +121,7 @@ contract LSP8Marketplace is
         _removeLSP8Sale(LSP8Address, tokenId);
 
         // set up escrow
-        _newEscrowSaleLYX(
-            LSP8Address,
-            tokenId,
-            0,
-            amount,
-            LSP8Owner,
-            msg.sender
-        );
+        _newEscrowSaleLYX(LSP8Address, tokenId, amount, LSP8Owner, msg.sender);
 
         // lock in escrow
         _transferLSP8(LSP8Address, LSP8Owner, address(this), tokenId, false, 1);
@@ -194,94 +130,147 @@ contract LSP8Marketplace is
         // LSP8Owner.transfer(amount);
     }
 
-    /**
-     * Buy LSP8 with LSP7.
-     *
-     * @param LSP8Address Address of the LSP8 token contract.
-     * @param tokenId Token id of the `LSP8Address` LSP8 that is on sale.
-     * @param LSP7Address Address of the token which is allowed for buyout.
-     *
-     * @notice For information about `LSP8OnSale` modifier check the LSP8MarketplaceSale smart contract.
-     * For information about `haveEnoughLSP7Balance` and `sellerAcceptsToken` modifiers
-     * and `_removeLSP8Prices` method check the LSP8MarketplacePrice smart contract.
-     * For information about `_removeLSP8Offers` method check the LSP8MarketplaceOffer smart contract.
-     * For information about `_transferLSP8` and `_transferLSP7` methods
-     * check the LSP8MarketplaceTrade smart contract.
-     */
-    function buyLSP8WithLSP7(
-        address LSP8Address,
-        bytes32 tokenId,
-        address LSP7Address
-    )
-        external
-        haveEnoughLSP7Balance(LSP8Address, tokenId, LSP7Address)
-        sellerAcceptsToken(LSP8Address, tokenId, LSP7Address)
-        LSP8OnSale(LSP8Address, tokenId)
-    {
-        address LSP8Owner = ILSP8IdentifiableDigitalAsset(LSP8Address)
-            .tokenOwnerOf(tokenId);
-        uint256 amount = _returnLSP7PriceByAddress(
-            LSP8Address,
-            tokenId,
-            LSP7Address
-        );
+    //
+    //
+    // BELOW FUNCTIONS INVOLVE LSP7 WHICH
+    // ARE NOT ACCEPTED FOR PURPOSE OF HACKATHON
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    // /**
+    //  * Change LSP7 price for a specific LSP8.
+    //  *
+    //  * @param LSP8Address Address of the LSP8 token contract.
+    //  * @param tokenId Token id of the `LSP8Address` NFT that is on sale.
+    //  * @param LSP7Address LSP7 address of an allowed token for buyout of the NFT.
+    //  * @param LSP7Amount New buyout amount in `LSP7Address` token for the NFT on sale.
+    //  *
+    //  * @notice For information about `ownsLSP8` and `LSP8OnSale` modifiers check the LSP8MarketplaceSale smart contract.
+    //  * For information about `LSP7PriceDoesNotExist` modifier check LSP8MarketplacePrice smart contract.
+    //  * For information about `removeLSP7PriceByAddress` and `_addLSP7PriceByAddress` methods check the LSP8MarketplacePrice smart contract.
+    //  */
+    // function changeLSP7Price(
+    //     address LSP8Address,
+    //     bytes32 tokenId,
+    //     address LSP7Address,
+    //     uint256 LSP7Amount
+    // )
+    //     external
+    //     ownsLSP8(LSP8Address, tokenId)
+    //     LSP8OnSale(LSP8Address, tokenId)
+    //     LSP7PriceDoesNotExist(LSP8Address, tokenId, LSP7Address)
+    // {
+    //     _removeLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address);
+    //     _addLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address, LSP7Amount);
+    // }
 
-        _removeOffers(LSP8Address, tokenId);
-        _removeLSP8Prices(LSP8Address, tokenId);
-        _removeLSP8Sale(LSP8Address, tokenId);
+    // /**
+    //  * Add LSP7 price for a specific LSP8.
+    //  *
+    //  * @param LSP8Address Address of the LSP8 token contract.
+    //  * @param tokenId Token id of the `LSP8Address` NFT that is on sale.
+    //  * @param LSP7Address LSP7 address of an allowed token for buyout of the NFT.
+    //  * @param LSP7Amount New buyout amount in `LSP7Address` token for the NFT on sale.
+    //  *
+    //  * @notice For information about `ownsLSP8` and `LSP8OnSale` modifiers
+    //  * check the LSP8MarketplaceSale smart contract.
+    //  * For information about `LSP7PriceDoesExist` modifier and `_addLSP7PriceByAddress` method
+    //  * check the LSP8MarketplacePrice smart contract.
+    //  */
+    // function addLSP7Price(
+    //     address LSP8Address,
+    //     bytes32 tokenId,
+    //     address LSP7Address,
+    //     uint256 LSP7Amount
+    // )
+    //     external
+    //     ownsLSP8(LSP8Address, tokenId)
+    //     LSP8OnSale(LSP8Address, tokenId)
+    //     LSP7PriceDoesExist(LSP8Address, tokenId, LSP7Address)
+    // {
+    //     _addLSP7PriceByAddress(LSP8Address, tokenId, LSP7Address, LSP7Amount);
+    // }
+    // /**
+    //  * Buy LSP8 with LSP7.
+    //  *
+    //  * @param LSP8Address Address of the LSP8 token contract.
+    //  * @param tokenId Token id of the `LSP8Address` LSP8 that is on sale.
+    //  * @param LSP7Address Address of the token which is allowed for buyout.
+    //  *
+    //  * @notice For information about `LSP8OnSale` modifier check the LSP8MarketplaceSale smart contract.
+    //  * For information about `haveEnoughLSP7Balance` and `sellerAcceptsToken` modifiers
+    //  * and `_removeLSP8Prices` method check the LSP8MarketplacePrice smart contract.
+    //  * For information about `_removeLSP8Offers` method check the LSP8MarketplaceOffer smart contract.
+    //  * For information about `_transferLSP8` and `_transferLSP7` methods
+    //  * check the LSP8MarketplaceTrade smart contract.
+    //  */
+    // function buyLSP8WithLSP7(
+    //     address LSP8Address,
+    //     bytes32 tokenId,
+    //     address LSP7Address
+    // )
+    //     external
+    //     haveEnoughLSP7Balance(LSP8Address, tokenId, LSP7Address)
+    //     sellerAcceptsToken(LSP8Address, tokenId, LSP7Address)
+    //     LSP8OnSale(LSP8Address, tokenId)
+    // {
+    //     address LSP8Owner = ILSP8IdentifiableDigitalAsset(LSP8Address)
+    //         .tokenOwnerOf(tokenId);
+    //     uint256 amount = _returnLSP7PriceByAddress(
+    //         LSP8Address,
+    //         tokenId,
+    //         LSP7Address
+    //     );
 
-        // set up escrow
-        escrowAddress = _newEscrowSaleLSP7(
-            LSP8Address,
-            tokenId,
-            LSP7Address,
-            amount,
-            LSP8Owner,
-            msg.sender
-        );
+    //     _removeOffers(LSP8Address, tokenId);
+    //     _removeLSP8Prices(LSP8Address, tokenId);
+    //     _removeLSP8Sale(LSP8Address, tokenId);
 
-        // transfer the assets to escrow smart contract
-        _transferLSP7(LSP7Address, msg.sender, escrowAddress, amount, false);
-        _transferLSP8(LSP8Address, LSP8Owner, escrowAddress, tokenId, false, 1);
-        // _transferLSP7(LSP7Address, msg.sender, LSP8Owner, amount, false);
-        // _transferLSP8(LSP8Address, LSP8Owner, msg.sender, tokenId, false, 1);
-    }
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
+    //     // set up escrow
+    //     escrowAddress = _newEscrowSaleLSP7(
+    //         LSP8Address,
+    //         tokenId,
+    //         LSP7Address,
+    //         amount,
+    //         LSP8Owner,
+    //         msg.sender
+    //     );
+
+    //     // transfer the assets to escrow smart contract
+    //     _transferLSP7(LSP7Address, msg.sender, escrowAddress, amount, false);
+    //     _transferLSP8(LSP8Address, LSP8Owner, escrowAddress, tokenId, false, 1);
+    //     // _transferLSP7(LSP7Address, msg.sender, LSP8Owner, amount, false);
+    //     // _transferLSP8(LSP8Address, LSP8Owner, msg.sender, tokenId, false, 1);
+    // }
     //
     // /**
     //  * Offer LSP8 in exchange for an LSP8 that is on sale.
