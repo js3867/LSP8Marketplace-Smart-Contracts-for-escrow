@@ -39,17 +39,22 @@ contract LSP8MarketplaceEscrow is LSP8MarketplaceTrade {
 
     uint256 count;
     mapping(uint256 => escrowTrade) trades; // trade objects attached to trades
+    event Log(string func, address sender, uint value, bytes data);
 
-    // constructor() {
-    //     address admin = msg.sender;
-    // }
+    fallback() external payable {
+        emit Log ("fallback", msg.sender, msg.value, msg.data)
+    };
+    
+    receive() external payable {
+        emit Log ("receive", msg. sender, msg. value,)
+    }
 
     /**
      * Called by marketplace when buyer commits to make payment.
      * Locks LSP8 LYX in escrow until exchange is complete.
      *
      * @param LSP8Address Address of the LSP8 to be transfered.
-     * @param tokenId Token id of the LSP8 to be transferred.
+     * @param tokenId Token id of the LSP8 to be transferred. 
      * @param amount Sale price of asset.
      * @param seller Address of the LSP8 sender (aka from).
      * @param buyer Address of the LSP8 receiver (aka to).
